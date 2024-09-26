@@ -22,13 +22,7 @@ private slots:
     void slotClearEntry();
     void slotClearAll();
     void slotBackspace();
-//    void slotPlus();
-//    void slotMinus();
-//    void slotMultiply();
-//    void slotDivide();
     void slotPoint();
-//    void slotEqual();
-//    void slotDeleteHistory();
 
 public:
     Calculator(QWidget *parent = nullptr);

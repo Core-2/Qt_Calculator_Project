@@ -135,9 +135,15 @@ void Calculator::clearOperands() {
 
 void Calculator::operationExec(Operation operation, double operand) {
     if(isOperatorPressed) {
+        if(isEqualPressed) {
+            SecondDisplay->setText(MainDisplay->text());
+            isEqualPressed = false;
+        }
+        else {
         QString text{SecondDisplay->text()};
         text.chop(1);
         SecondDisplay->setText(text);
+        }
 
         if(operation == Operation::multiply ||
                 operation == Operation::divide)
@@ -214,7 +220,7 @@ void Calculator::operationExec(Operation operation, double operand) {
     }
 
     if(operation == Operation::equal) {
-        MainDisplay->setText(QString::number(currentSum));
+        MainDisplay->setText(QString::number(currentSum, 'g', 16));
         isEqualPressed = true;
     }
 
@@ -237,14 +243,10 @@ void Calculator::slotDigitPressed(int digit) {
         if(digit == 0) return;
         MainDisplay->setText(QString::number(digit));
 
-        //qDebug() << "Display's length: " << MainDisplay->text().length();
-
         return;
     }
 
     MainDisplay->setText(MainDisplay->text() + QString::number(digit));
-
-    //qDebug() << "Display's length: " << MainDisplay->text().length();
 }
 
 
@@ -275,6 +277,17 @@ void Calculator::slotOperatorPressed() {
 
 
 void Calculator::slotPoint() {
+    if(isEqualPressed) {
+        MainDisplay->setText("0");
+        SecondDisplay->setText("");
+        clearOperands();
+    }
+
+    if(isOperatorPressed) {
+        MainDisplay->setText("0");
+        isOperatorPressed = false;
+    }
+
     if(!MainDisplay->text().contains('.')) {
         MainDisplay->setText(MainDisplay->text() + ".");
     }
@@ -294,7 +307,6 @@ void Calculator::slotChangeSign() {
 
     MainDisplay->setText(text);
 }
-
 
 
 void Calculator::slotClearEntry() {
