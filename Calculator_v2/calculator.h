@@ -17,15 +17,17 @@ class Calculator : public QWidget
     Q_OBJECT
 private slots:
     void slotDigitPressed(int);
-//    void slotClearEntry();
-//    void slotClear();
+    void slotOperatorPressed();
+    void slotChangeSign();
+    void slotClearEntry();
+    void slotClearAll();
     void slotBackspace();
-    void slotPlus();
+//    void slotPlus();
 //    void slotMinus();
 //    void slotMultiply();
 //    void slotDivide();
     void slotPoint();
-    void slotEqual();
+//    void slotEqual();
 //    void slotDeleteHistory();
 
 public:
@@ -33,20 +35,14 @@ public:
     ~Calculator();
 
 private:
-    double result{0};
-    double currentSum{0};
-    double currentFactor{0};
-    double currentOperand{0};
-    bool isFirstOp{true};
-    bool isNextNumEmpty{true};
-    bool isPointPressed{false};
-    bool isOperatorPressed{false};
-    bool isEqualPressed{false};
-    int decimalCount{0};
-    const int DIGIT_COUNT{11};
-    int currentDigitCount{0};
+    double currentSum;
+    double currentFactor;
+    double currentOperand;
+    bool isOperatorPressed;
+    bool isEqualPressed;
 
     enum class Operation {
+        no_op,
         plus,
         minus,
         multiply,
@@ -54,10 +50,14 @@ private:
         equal,
     };
 
-    Operation op;
+    Operation currentOperation;
+    Operation previousOperation;
+    Operation pendingOperation;
 
     QLineEdit *MainDisplay;
     QLineEdit *SecondDisplay;
+
+    const QString divisionByZeroMsg{"Cannot divide by zero"};
 
     QList<QPushButton*> DigitButtons;
 
@@ -86,6 +86,8 @@ private:
 
     void createWidgets();
 
-    void operationExec();
+    void clearOperands();
+
+    void operationExec(Operation, double);
 };
 #endif // CALCULATOR_H

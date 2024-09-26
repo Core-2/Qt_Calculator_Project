@@ -114,14 +114,119 @@ void Calculator::createWidgets() {
     EqualButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
     historyDeleteButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+
+
+    clearOperands();
 }
+
+
+void Calculator::clearOperands() {
+    currentOperand = 0.0;
+    currentSum = 0.0;
+    currentFactor = 0.0;
+    isEqualPressed = false;
+    isOperatorPressed = false;
+
+    currentOperation = Operation::no_op;
+    previousOperation = Operation::no_op;
+    pendingOperation = Operation::no_op;
+}
+
+
+void Calculator::operationExec(Operation operation, double operand) {
+    if(isOperatorPressed) {
+        QString text{SecondDisplay->text()};
+        text.chop(1);
+        SecondDisplay->setText(text);
+
+        if(operation == Operation::multiply ||
+                operation == Operation::divide)
+        {
+            currentFactor = operand;
+            currentSum = 0.0;
+        }
+        else {
+            currentSum = operand;
+            currentFactor = 0.0;
+        }
+
+
+        previousOperation = operation;
+
+        return;
+    }
+
+    SecondDisplay->setText(SecondDisplay->text() + MainDisplay->text());
+
+    switch(previousOperation) {
+    case Operation::no_op:
+        if(operation == Operation::multiply ||
+                operation == Operation::divide)
+            currentFactor = operand;
+        else
+            currentSum = operand;
+
+        break;
+
+    case Operation::plus:
+    case Operation::minus:
+        if(operation == Operation::multiply ||
+                operation == Operation::divide)
+        {
+            currentFactor = operand;
+            pendingOperation = previousOperation;
+        }
+        else {
+            if(previousOperation == Operation::plus)
+                currentSum += operand;
+            else if(previousOperation == Operation::minus)
+                currentSum -= operand;
+        }
+        break;
+
+    case Operation::multiply:
+    case Operation::divide:
+        if(previousOperation == Operation::divide && operand == 0.0) {
+            MainDisplay->setText(divisionByZeroMsg);
+            isEqualPressed = true;
+            return;
+        }
+        if(previousOperation == Operation::multiply)
+            currentFactor *= operand;
+        else if(previousOperation == Operation::divide)
+            currentFactor /= operand;
+
+        if(operation != Operation::multiply &&
+                operation != Operation::divide)
+        {
+            if(pendingOperation == Operation::plus || pendingOperation == Operation::no_op)
+                currentSum += currentFactor;
+            else if(pendingOperation == Operation::minus)
+                currentSum -= currentFactor;
+
+            currentFactor = 0.0;
+            pendingOperation = Operation::no_op;
+        }
+        break;
+
+    case Operation::equal:
+        break;
+    }
+
+    if(operation == Operation::equal) {
+        MainDisplay->setText(QString::number(currentSum));
+        isEqualPressed = true;
+    }
+
+    previousOperation = operation;
+}
+
 
 void Calculator::slotDigitPressed(int digit) {
     if(isEqualPressed) {
+        MainDisplay->setText("0");
         SecondDisplay->setText("");
-        currentSum = 0;
-        currentOperand = 0;
-        isEqualPressed = false;
+        clearOperands();
     }
     if(isOperatorPressed) {
         MainDisplay->setText("0");
@@ -142,52 +247,74 @@ void Calculator::slotDigitPressed(int digit) {
     //qDebug() << "Display's length: " << MainDisplay->text().length();
 }
 
+
+void Calculator::slotOperatorPressed() {
+    QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
+
+    if(clickedButton->text() == "+")
+        currentOperation = Operation::plus;
+    else if(clickedButton->text() == "-")
+        currentOperation = Operation::minus;
+    else if(clickedButton->text() == "\303\227")
+        currentOperation = Operation::multiply;
+    else if(clickedButton->text() == "\303\267")
+        currentOperation = Operation::divide;
+    else if(clickedButton->text() == "=")
+        currentOperation = Operation::equal;
+    else
+        currentOperation = Operation::no_op;
+
+    currentOperand = MainDisplay->text().toDouble();
+
+    operationExec(currentOperation, currentOperand);
+
+    SecondDisplay->setText(SecondDisplay->text() + clickedButton->text());
+
+    isOperatorPressed = true;
+}
+
+
 void Calculator::slotPoint() {
     if(!MainDisplay->text().contains('.')) {
         MainDisplay->setText(MainDisplay->text() + ".");
     }
 }
 
-void Calculator::slotPlus() {
-    if(isEqualPressed) {
-        SecondDisplay->setText(MainDisplay->text() + "+");
-        currentSum = 0;
-        currentOperand = 0;
-        isEqualPressed = false;
+
+void Calculator::slotChangeSign() {
+    QString text = MainDisplay->text();
+    double operand = text.toDouble();
+
+    if(operand > 0.0) {
+        text.prepend("-");
     }
-    else {
-        SecondDisplay->setText(SecondDisplay->text() + MainDisplay->text() + "+");
+    else if(operand < 0.0) {
+        text.remove(0, 1);
     }
 
-    currentOperand = MainDisplay->text().toDouble();
-    currentSum += currentOperand;
-    currentOperand = 0;
-    isOperatorPressed = true;
+    MainDisplay->setText(text);
 }
 
-void Calculator::slotEqual() {
+
+
+void Calculator::slotClearEntry() {
+    MainDisplay->setText("0");
+}
+
+
+void Calculator::slotClearAll() {
+    slotClearEntry();
+    SecondDisplay->setText("");
+    clearOperands();
+}
+
+
+void Calculator::slotBackspace() {
     if(isEqualPressed) {
-        SecondDisplay->setText(QString::number(currentSum) + "+" + QString::number(currentOperand) + "=");
-
-        currentSum += currentOperand;
-
-        MainDisplay->setText(QString::number(currentSum));
-
+        SecondDisplay->setText("");
         return;
     }
 
-    SecondDisplay->setText(SecondDisplay->text() + MainDisplay->text() + "=");
-
-    currentOperand = MainDisplay->text().toDouble();
-    currentSum += currentOperand;
-
-    MainDisplay->setText(QString::number(currentSum));
-
-    isEqualPressed = true;
-    isOperatorPressed = true;
-}
-
-void Calculator::slotBackspace() {
     if(MainDisplay->text() == "0") return;
 
     QString text{MainDisplay->text()};
@@ -198,6 +325,7 @@ void Calculator::slotBackspace() {
 
     MainDisplay->setText(text);
 }
+
 
 Calculator::Calculator(QWidget *parent)
     : QWidget(parent)
@@ -217,11 +345,18 @@ Calculator::Calculator(QWidget *parent)
 
     connect(BackspaceButton, SIGNAL(clicked()), this, SLOT(slotBackspace()), Qt::UniqueConnection);
     connect(PointButton, SIGNAL(clicked()), this, SLOT(slotPoint()), Qt::UniqueConnection);
+    connect(ChangeSignButton, SIGNAL(clicked()), this, SLOT(slotChangeSign()), Qt::UniqueConnection);
+    connect(ClearButton, SIGNAL(clicked()), this, SLOT(slotClearEntry()), Qt::UniqueConnection);
+    connect(ClearAllButton, SIGNAL(clicked()), this, SLOT(slotClearAll()), Qt::UniqueConnection);
 
-    connect(PlusButton, SIGNAL(clicked()), this, SLOT(slotPlus()), Qt::UniqueConnection);
-    connect(EqualButton, SIGNAL(clicked()), this, SLOT(slotEqual()), Qt::UniqueConnection);
+    connect(PlusButton, SIGNAL(clicked()), this, SLOT(slotOperatorPressed()), Qt::UniqueConnection);
+    connect(MinusButton, SIGNAL(clicked()), this, SLOT(slotOperatorPressed()), Qt::UniqueConnection);
+    connect(MultButton, SIGNAL(clicked()), this, SLOT(slotOperatorPressed()), Qt::UniqueConnection);
+    connect(DivisionButton, SIGNAL(clicked()), this, SLOT(slotOperatorPressed()), Qt::UniqueConnection);
+    connect(EqualButton, SIGNAL(clicked()), this, SLOT(slotOperatorPressed()), Qt::UniqueConnection);
 
 }
+
 
 Calculator::~Calculator()
 {
