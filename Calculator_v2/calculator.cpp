@@ -22,11 +22,9 @@ void Calculator::createWidgets() {
     ChangeSignButton = new QPushButton("\302\261");
     EqualButton = new QPushButton("=");
 
-    historyWindow = new QWidget();
-    historyLayout = new QVBoxLayout(historyWindow);
     historyLabel = new QLabel("History");
-    historyArea = new QScrollArea();
     historyDeleteButton = new QPushButton("Del");
+    historyList = new QListWidget();
 
     calcLayout->addWidget(SecondDisplay, 0, 0, 1, 4);
     calcLayout->addWidget(MainDisplay, 1, 0, 1, 4);
@@ -59,7 +57,7 @@ void Calculator::createWidgets() {
 
     calcLayout->addWidget(historyLabel, 0, 4);
     calcLayout->addWidget(historyDeleteButton, 0, 5);
-    calcLayout->addWidget(historyArea, 1, 4, 6, 2);
+    calcLayout->addWidget(historyList, 1, 4, 6, 2);
 
     QFont *mainDisplayFont = new QFont();
     mainDisplayFont->setPointSize(36);
@@ -84,16 +82,8 @@ void Calculator::createWidgets() {
     SecondDisplay->setFont(*secondDisplayFont);
     SecondDisplay->setTextMargins(10, 0, 10, 0);
 
-    historyArea->setWidget(historyWindow);
-    historyArea->setFixedWidth(300);
-    historyArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    historyArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-
     historyDeleteButton->setFixedWidth(100);
     historyDeleteButton->setEnabled(false);
-
-    historyLayout->setAlignment(Qt::AlignTop);
-    historyLayout->setContentsMargins(0, 0, 0, 0);
 
     historyLabel->setFixedSize(200, 50);
 
@@ -117,6 +107,15 @@ void Calculator::createWidgets() {
 
 
     clearOperands();
+}
+
+
+void Calculator::addResultToHistory() {
+//    new QListWidgetItem(SecondDisplay->text() + MainDisplay->text(), historyList);
+    historyList->insertItem(0, (new QListWidgetItem(SecondDisplay->text() + MainDisplay->text())));
+
+    if(!historyDeleteButton->isEnabled())
+        historyDeleteButton->setEnabled(true);
 }
 
 
@@ -273,6 +272,9 @@ void Calculator::slotOperatorPressed() {
     SecondDisplay->setText(SecondDisplay->text() + clickedButton->text());
 
     isOperatorPressed = true;
+
+    if(isEqualPressed && MainDisplay->text() != divisionByZeroMsg)
+        addResultToHistory();
 }
 
 
@@ -339,6 +341,12 @@ void Calculator::slotBackspace() {
 }
 
 
+void Calculator::slotDeleteHistory() {
+    historyList->clear();
+    historyDeleteButton->setEnabled(false);
+}
+
+
 Calculator::Calculator(QWidget *parent)
     : QWidget(parent)
 {
@@ -360,6 +368,7 @@ Calculator::Calculator(QWidget *parent)
     connect(ChangeSignButton, SIGNAL(clicked()), this, SLOT(slotChangeSign()), Qt::UniqueConnection);
     connect(ClearButton, SIGNAL(clicked()), this, SLOT(slotClearEntry()), Qt::UniqueConnection);
     connect(ClearAllButton, SIGNAL(clicked()), this, SLOT(slotClearAll()), Qt::UniqueConnection);
+    connect(historyDeleteButton, SIGNAL(clicked()), this, SLOT(slotDeleteHistory()), Qt::UniqueConnection);
 
     connect(PlusButton, SIGNAL(clicked()), this, SLOT(slotOperatorPressed()), Qt::UniqueConnection);
     connect(MinusButton, SIGNAL(clicked()), this, SLOT(slotOperatorPressed()), Qt::UniqueConnection);

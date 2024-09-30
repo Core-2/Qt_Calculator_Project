@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 #include <QString>
 #include <QLineEdit>
+#include <QListWidget>
 
 
 class Calculator : public QWidget
@@ -23,6 +24,7 @@ private slots:
     void slotClearAll();
     void slotBackspace();
     void slotPoint();
+    void slotDeleteHistory();
 
 public:
     Calculator(QWidget *parent = nullptr);
@@ -71,14 +73,13 @@ private:
 
     QSignalMapper *mapper;
 
-    QVBoxLayout *historyLayout;
-    QList<QLabel*> historyList;
-    QScrollArea *historyArea;
-    QWidget *historyWindow;
     QLabel* historyLabel;
     QPushButton *historyDeleteButton;
+    QListWidget *historyList;
 
     void createWidgets();
+
+    void addResultToHistory();
 
     void clearOperands();
 
