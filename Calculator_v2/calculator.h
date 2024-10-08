@@ -84,5 +84,7 @@ private:
     void clearOperands();
 
     void operationExec(Operation, double);
+
+    Operation recognizeOperator(QString);
 };
 #endif // CALCULATOR_H

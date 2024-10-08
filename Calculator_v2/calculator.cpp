@@ -132,6 +132,25 @@ void Calculator::clearOperands() {
 }
 
 
+Calculator::Operation Calculator::recognizeOperator(QString text) {
+    Operation operation;
+    if(text == "+")
+        operation = Operation::plus;
+    else if(text == "-")
+        operation = Operation::minus;
+    else if(text == "\303\227")
+        operation = Operation::multiply;
+    else if(text == "\303\267")
+        operation = Operation::divide;
+    else if(text == "=")
+        operation = Operation::equal;
+    else
+        operation = Operation::no_op;
+
+    return operation;
+}
+
+
 void Calculator::operationExec(Operation operation, double operand) {
     if(isOperatorPressed) {
         if(isEqualPressed) {
@@ -252,18 +271,7 @@ void Calculator::slotDigitPressed(int digit) {
 void Calculator::slotOperatorPressed() {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
 
-    if(clickedButton->text() == "+")
-        currentOperation = Operation::plus;
-    else if(clickedButton->text() == "-")
-        currentOperation = Operation::minus;
-    else if(clickedButton->text() == "\303\227")
-        currentOperation = Operation::multiply;
-    else if(clickedButton->text() == "\303\267")
-        currentOperation = Operation::divide;
-    else if(clickedButton->text() == "=")
-        currentOperation = Operation::equal;
-    else
-        currentOperation = Operation::no_op;
+    currentOperation = recognizeOperator(clickedButton->text());
 
     currentOperand = MainDisplay->text().toDouble();
 
