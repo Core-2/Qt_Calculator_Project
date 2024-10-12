@@ -85,6 +85,11 @@ private:
 
     void operationExec(Operation, double);
 
+    void operatorPressedAgain(Operation, double);
+    void operatorPressedFirstTime(Operation, double);
+    void additiveOperatorPressed(Operation, double);
+    void multiplicativeOperatorPressed(Operation, double);
+
     Operation recognizeOperator(QString);
 };
 #endif // CALCULATOR_H
