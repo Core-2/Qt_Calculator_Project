@@ -108,7 +108,7 @@ void Calculator::createWidgets() {
 
 
 void Calculator::addResultToHistory() {
-    historyList->insertItem(0, (new QListWidgetItem(SecondDisplay->text() + MainDisplay->text() + '=' + QString::number(result))));
+    historyList->insertItem(0, (new QListWidgetItem(SecondDisplay->text() + MainDisplay->text() + '=' + QString::number(result, 'g', 16))));
 
     if(!historyDeleteButton->isEnabled())
         historyDeleteButton->setEnabled(true);
@@ -187,6 +187,8 @@ void Calculator::slotDigitPressed(int digit) {
         slotClearAll();
     }
 
+    if(MainDisplay->text().length() == 16) return;
+
     if(MainDisplay->text() == "0") {
 
         if(digit == 0)
@@ -229,7 +231,7 @@ void Calculator::slotOperatorPressed() {
 
     isOperatorPressed = true;
 
-    MainDisplay->setText(QString::number(result));
+    MainDisplay->setText(QString::number(result, 'g', 16));
 
     if(currentOperation == Operation::equal) {
         isEqualPressed = true;
