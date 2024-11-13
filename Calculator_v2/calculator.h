@@ -6,8 +6,7 @@
 #include <QSignalMapper>
 #include <QLabel>
 #include <QList>
-#include <QScrollArea>
-#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QString>
 #include <QLineEdit>
 #include <QListWidget>
@@ -31,11 +30,11 @@ public:
     ~Calculator();
 
 private:
-    double currentSum;
-    double currentFactor;
-    double currentOperand;
+    double result;
+    double rightOperand;
     bool isOperatorPressed;
     bool isEqualPressed;
+    bool isFirstOperation;
 
     enum class Operation {
         no_op,
@@ -46,9 +45,8 @@ private:
         equal,
     };
 
+    Operation storedOperation;
     Operation currentOperation;
-    Operation previousOperation;
-    Operation pendingOperation;
 
     QLineEdit *MainDisplay;
     QLineEdit *SecondDisplay;
@@ -83,12 +81,10 @@ private:
 
     void clearOperands();
 
-    void operationExec(Operation, double);
+    void calculate(double, Operation);
 
-    void operatorPressedAgain(Operation, double);
-    void operatorPressedFirstTime(Operation, double);
-    void additiveOperatorPressed(Operation, double);
-    void multiplicativeOperatorPressed(Operation, double);
+    void lockOperationButtons();
+    void unlockOperationButtons();
 
     Operation recognizeOperator(QString);
 };
